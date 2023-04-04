@@ -8,6 +8,17 @@ let userData;
   let user = await res.json();
   userData = user[0];
 
+  // const result = {
+  //   question: "Please select an animal live in the enviroment shown in photo.",
+  //   student_code: "S00001",
+  //   student_id: 1,
+  //   student_name: "波波' Lai",
+  //   student_score: 10,
+  //   time: 10,
+  //   total_question: 5,
+  //   total_score: 35,
+  // };
+
   //load student details
   document.querySelector(".user-info-container").innerHTML =
     /*HTML*/

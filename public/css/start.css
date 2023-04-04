@@ -37,7 +37,7 @@ main {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 50px;
-  margin-top: 10px;
+  margin-top: 0.1vh;
 }
 
 .user-info-container {
@@ -51,7 +51,7 @@ main {
 }
 
 .user-info-container span {
-  font-size: calc(10px + 2vmin);
+  font-size: 1rem;
   color: #c44b01;
   font-weight: bold;
   user-select: none;
@@ -107,7 +107,7 @@ main {
 }
 
 .modal-content-container h1 {
-  font-size: calc(10px + 2vmin)
+  font-size: calc(50px + 2vmin);
   font-weight: bold;
   color: #ed6d1e;
   text-align: center;
@@ -115,7 +115,7 @@ main {
 }
 
 .modal-content-container h2 {
-  font-size: 52px;
+  font-size: calc(40px + 2vmin);
   font-weight: bold;
   height: 3rem;
   color: #253e5a;
@@ -130,7 +130,8 @@ main {
 }
 
 .quiz-details div > span {
-  font-size: 60px;
+  font-size: calc(30px + 2vmin);
+  font-weight: bold;
   color: #ed6d1e;
   user-select: none;
   margin-left: 40px;
@@ -180,7 +181,11 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 50px;
+}
+
+.foot-bar div:nth-child(2) a {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .foot-bar img:hover {
