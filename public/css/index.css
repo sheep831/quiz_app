@@ -1,0 +1,121 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+@font-face {
+  font-family: "Chalkboard SE";
+  src: url("../assets/chalkboard.otf");
+}
+
+body {
+  font-family: "Chalkboard SE", serif;
+}
+
+main {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: url("../assets/front-bkgd.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+.upper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 150px;
+  width: 90%;
+}
+
+.score-date-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 90%;
+  width: 100%;
+}
+
+.lower {
+  background: url("../assets/start.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  height: 560px;
+  width: 70%;
+  cursor: pointer;
+}
+
+.user-info {
+  height: 100%;
+  width: 30%;
+  background: url("../assets/red-name.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-info span {
+  color: white;
+  font-size: x-large;
+}
+
+.user-star {
+  height: 100%;
+  width: 20%;
+  background: url("../assets/3-star.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-star span {
+  font-size: xx-large;
+  color: #c44b01;
+  font-weight: bold;
+  user-select: none;
+  margin-left: 50px;
+  margin-bottom: 10px;
+}
+
+.date {
+  height: 100%;
+  width: 20%;
+  background: url("../assets/name-tag.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.date div {
+  padding-bottom: 13px;
+}
+
+.date div span {
+  font-size: 21px;
+  color: #c44b01;
+  font-weight: bold;
+  user-select: none;
+  margin-left: 50px;
+  margin-bottom: 10px;
+}

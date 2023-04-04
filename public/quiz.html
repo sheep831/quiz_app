@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz</title>
+    <link rel="stylesheet" href="css/quiz.css" />
+  </head>
+  <body onload="NextQuestion(0)">
+    <main>
+      <!-- Start of the user info container -->
+      <div class="user-info-row">
+      <div class="user-container">
+        <div class="user-info-container"></div>
+        <div class="player-score-container">
+          <span id="upper-player-score"></span>
+        </div>
+      </div>
+    </div>
+      <!-- End of the user info container -->
+
+      <!-- Start of the modal for hints -->
+      <div class="hint-container" id="hint-modal">
+        <div class="modal-content-container">
+          <h1>Hint</h1>
+
+          <div class="hint-detail">
+          </div>
+          <button onclick="closeHintModal()" class="modal-continue"></button>
+        </div>
+      </div>
+      <!-- End of the modal for hints -->
+
+            <!-- Start of the modal for explanation -->
+            <div class="explanation-container" id="explanation-modal">
+              <div class="modal-content-container">
+                <img src="../assets/tick.png" width="200px" height="200px" />
+                <h1></h1>
+      
+                <div class="explanation-detail">
+                </div>
+                <button onclick="handleNextQuestion()" class="modal-continue"></button>
+              </div>
+            </div>
+            <!-- End of the modal for explanation -->
+
+      <!-- creating a modal for when quiz ends -->
+      <div class="modal-container" id="score-modal">
+        <div class="modal-content-container-result">
+          <div id="result-container">
+            <div id="result-frame">
+              <span id="result-text">RESULT</span>
+            </div>
+            <div class="grade-details">
+              <div class="grade-content">
+                <div class="score-text">Total Score</div>
+                <div class="score-container-star">
+                  <img
+                    class="single-star"
+                    src="./assets/single-star.png"
+                    alt="single-star"
+                  />
+                  <p id="score-x">x</p>
+                  <p id="user-score"></p>
+                </div>
+              </div>
+              <div class="timer-container">
+                <span class="timer-text">Total Time</span class="timer-text">
+                <div class="timer-content">
+                  <img id="timer-logo" src="./assets/time.png" alt="timer"/>
+                  <span id="timer-time">3:28</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-button-box">
+            <button class="modal-button-img"></button>
+          </div>
+        </div>
+      </div>
+      <!--Start of Up bar above the question container -->
+
+      <div class="game-details-container">
+
+        <div class="score-container">
+          <div class="left-topbar">
+            <div>
+              <img src="assets/orange-circle.png" height="90px" weight="90px" />
+            </div>
+            <div class="score-container-star">
+              <img
+              src="assets/single-star.png"
+              alt=""
+              height="45px"
+              weight="45px"
+              style="margin-right: 15px"
+            />
+              <p id="player-score-x">x</p>
+              <p id="player-score">&nbsp</p>
+            </div>
+          </div>
+          <div class="right-topbar">
+            <img src="assets/timer.png" height="35px" weight="150px" />
+            <div class="total-timer-container"></div>
+          </div>
+        </div>
+      </div>
+      <!--End of Up bar above the question container -->
+
+      <div class="game-question-container">
+        <h1 id="display-question"></h1>
+        <div id="question-img"></div>
+        <div class="question-timer-container">
+          <img src="../assets/orange-timer.png" width="38px" height="42px" />
+          <div id="progressBar">
+            <div></div>
+          </div>
+          <div class="question-time-container"></div>
+        </div>
+      </div>
+
+      <div class="game-options-container">
+        <!-- Start of "Pick an option" warning modal -->
+        <div class="modal-container" id="option-modal">
+          <div class="modal-content-container-result">
+            <h1>Please Pick An Option</h1>
+
+            <div class="modal-button-container">
+              <button onclick="closeOptionModal()">Continue</button>
+            </div>
+          </div>
+        </div>
+        <!-- End of Pick option warning modal -->
+        <!-- Start of Option A - D -->
+        <span id="option-one-span">
+          <input
+            type="radio"
+            id="option-one"
+            name="option"
+            class="radio"
+            value="optionA"
+          />
+          <label for="option-one" class="option" id="option-one-label"></label>
+        </span>
+
+        <span id="option-two-span">
+          <input
+            type="radio"
+            id="option-two"
+            name="option"
+            class="radio"
+            value="optionB"
+          />
+          <label for="option-two" class="option" id="option-two-label"></label>
+        </span>
+
+        <span id="option-three-span">
+          <input
+            type="radio"
+            id="option-three"
+            name="option"
+            class="radio"
+            value="optionC"
+          />
+          <label
+            for="option-three"
+            class="option"
+            id="option-three-label"
+          ></label>
+        </span>
+
+        <span id="option-four-span">
+          <input
+            type="radio"
+            id="option-four"
+            name="option"
+            class="radio"
+            value="optionD"
+          />
+          <label
+            for="option-four"
+            class="option"
+            id="option-four-label"
+          ></label>
+        </span>
+      </div>
+      <!-- End of Option A - D -->
+
+      <!-- Start of the bottom foot bar -->
+      <div class="foot-bar">
+        <div class="left-buttons-container">
+          <div class="current-question">
+            <img
+              src="assets/question-circle.png"
+              alt=""
+              height="50px"
+              weight="50px"
+            /><span class="question-no"></span>
+          </div>
+          <img src="assets/of.png" alt="" height="40px" weight="40px" />
+          <div class="total-question">
+            <img
+              src="assets/question-circle.png"
+              alt=""
+              height="50px"
+              weight="50px"
+            /><span class="total-question-no"></span>
+          </div>
+          <img
+            src="assets/hints.png"
+            height="50px"
+            weight="150px"
+            class="hint-btn"
+          />
+        </div>
+        <div class="next-button-container">
+          <!-- <button onclick="handleNextQuestion()"> -->
+            <button class="continue-btn">
+          </button>
+        </div>
+      </div>
+      <!-- End of the bottom foot bar -->
+    </main>
+    <script src="js/quiz.js"></script>
+  </body>
+</html>
