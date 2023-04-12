@@ -1,94 +1,48 @@
+// Define a function to fetch data and then execute the NextQuestion function
+async function loadAndStart() {
+  await loadData();
+  NextQuestion(0);
+}
+
+window.onload = loadAndStart;
+
 // -------------------------------------------------------------------------------------------------------------------
 // get Data from Database
 // -------------------------------------------------------------------------------------------------------------------
 let userData;
-let questions_data;
-async function loadData() {
-  const res = await fetch("/user/details");
-  let user = await res.json();
-  userData = user[0];
+let questions;
+const urlParams = new URLSearchParams(window.location.search);
+const quiz_guid = urlParams.get("quiz");
 
-  const response = await fetch("/quiz/details");
-  let results = await response.json();
-  questions_data = results;
+async function loadData() {
+  try {
+    const res = await Promise.all([
+      fetch(`/user/details/${quiz_guid}`),
+      fetch(`/quiz/details/${quiz_guid}`),
+    ]);
+    const data = await Promise.all(res.map((item) => item.json()));
+    userData = data[0][0];
+    questions = data[1];
+  } catch (e) {
+    console.log(e);
+  }
 
   //load student details
   document.querySelector(".user-info-container").innerHTML =
     /*HTML*/
     `
-<span>${userData.student_name}</span><br>
-<span>(${userData.student_code})</span>
-`;
+    <span>${userData.student_name}</span><br>
+    <span>(${userData.student_code})</span>
+    `;
 
-  setGlobalTimer(userData.time, formatTime); //set the global timer when game starts
+  document.querySelector("#upper-player-score").innerHTML =
+    userData.student_score;
 
-  console.log("questions_data", questions_data);
+  document.querySelector(".total-question-no").innerHTML = questions.length;
+
+  //set the global timer when game starts
+  setGlobalTimer(userData.time, formatTime);
 }
-loadData();
-// -------------------------------------------------------------------------------------------------------------------
-// Data from DB
-// -------------------------------------------------------------------------------------------------------------------
-// const quiz_details = {
-//   quiz_id: 1,
-//   quiz_name: "Quiz 1",
-//   quiz_time: 10,
-//   quiz_score: 0,
-// };
-
-const questions = [
-  {
-    question: "以下哪種生物生活在圖中的環境?",
-    imageA: "http://localhost:8000/assets/A.png",
-    imageB: "http://localhost:8000/assets/B.png",
-    imageC: "http://localhost:8000/assets/C.png",
-    imageD: "http://localhost:8000/assets/D.png",
-    correctOption: "optionD",
-    time: 10,
-    ans: "D",
-    explanation: "No explanation",
-    image: "http://localhost:8000/assets/wood.png",
-    hint: "No hints",
-  },
-
-  {
-    question: "How many players are allowed on a soccer pitch ?",
-    optionA: "10 players",
-    optionB: "11 players",
-    optionC: "9 players",
-    optionD: "12 players",
-    correctOption: "optionB",
-    time: 9,
-    ans: "B",
-    explanation: "11 players are allowed on a soccer pitch.",
-    hint: "11 players are allowed on a soccer pitch.",
-  },
-  {
-    question: "Who was the first President of USA ?",
-    optionA: "Donald Trump",
-    optionB: "Barack Obama",
-    optionC: "Abraham Lincoln",
-    optionD: "George Washington",
-    correctOption: "optionD",
-    time: 8,
-    ans: "D",
-    explanation: "George Washington was the first President of USA.",
-    hint: "George Washington was the first President of USA.",
-  },
-
-  {
-    question: "30 days has ______ ?",
-    optionA: "January",
-    optionB: "December",
-    optionC: "June",
-    optionD: "August",
-    correctOption: "optionC",
-    time: 7,
-    ans: "C",
-    explanation: "June has 30 days.",
-    hint: "No hints",
-  },
-];
-
 // -------------------------------------------------------------------------------------------------------------------
 // Timer
 // -------------------------------------------------------------------------------------------------------------------
@@ -112,12 +66,12 @@ function setGlobalTimer(quizTime, formatTime) {
 
   (function startTimer() {
     let intervalId = setInterval(() => {
+      let timesUp = remainingTime <= 0 ? true : false;
       remainingTime -= 1000;
-      if (remainingTime <= 0) {
+      if (timesUp) {
         // if time is up
         clearInterval(intervalId);
-        document.querySelector(".total-timer-container").innerHTML =
-          "Time's up!";
+        handleEndGame();
       } else {
         document.querySelector(".total-timer-container").innerHTML =
           formatTime(remainingTime);
@@ -166,6 +120,10 @@ function setQuestionTimer(currentQuestion, formatTime) {
   let timerId = setInterval(() => {
     remainingTime -= 10;
     let questionTimesUp = remainingTime <= 0 ? true : false;
+    if (questionTimesUp) {
+      closeHintModal();
+    }
+
     if (questionTimesUp || (continueClicked && !noOptionSelected)) {
       // if time is up or question is answered
       clearInterval(timerId);
@@ -210,7 +168,7 @@ let timeIsUp = false;
 
 function handleQuestions() {
   //function to shuffle and push questions to shuffledQuestions array
-  while (shuffledQuestions.length <= 3) {
+  while (shuffledQuestions.length < questions.length) {
     const random = questions[Math.floor(Math.random() * questions.length)];
     if (!shuffledQuestions.includes(random)) {
       shuffledQuestions.push(random);
@@ -238,11 +196,8 @@ for (let i = 0; i < radios.length; i++) {
 }
 
 let questionNumber = 1;
-let playerScore = 0;
 let wrongAttempt = 0;
 let indexNumber = 0;
-
-document.querySelector(".total-question-no").innerHTML = questions.length;
 
 function nextQuestionStage(currentQuestion) {
   //if there is question image
@@ -256,29 +211,8 @@ function nextQuestionStage(currentQuestion) {
     questionImage.backgroundSize = "contain";
     questionImage.backgroundRepeat = "no-repeat";
     questionImage.marginTop = "15px";
-  }
+    questionImage.minHeight = "100px";
 
-  //set game details
-  document.querySelector(".question-no").innerHTML = questionNumber;
-  document.getElementById("player-score").innerHTML =
-    "&nbsp" + playerScore; /*HTML*/
-  // `
-  // <span> <span style="font-size: 30px;">x</span> ${playerScore}</span>
-  // `;
-
-  document.getElementById("display-question").innerHTML =
-    currentQuestion.question;
-
-  if (currentQuestion.optionA) {
-    document.getElementById("option-one-label").innerHTML =
-      currentQuestion.optionA;
-    document.getElementById("option-two-label").innerHTML =
-      currentQuestion.optionB;
-    document.getElementById("option-three-label").innerHTML =
-      currentQuestion.optionC;
-    document.getElementById("option-four-label").innerHTML =
-      currentQuestion.optionD;
-  } else {
     const options = document.querySelectorAll(".game-options-container span");
     for (const option of options) {
       option.style.display = "flex";
@@ -302,7 +236,25 @@ function nextQuestionStage(currentQuestion) {
       imageStyles[i].style.backgroundRepeat = "no-repeat";
       imageStyles[i].style.backgroundPosition = "center";
     }
+  } else {
+    document.getElementById("option-one-label").innerHTML = currentQuestion.A;
+    document.getElementById("option-two-label").innerHTML = currentQuestion.B;
+    document.getElementById("option-three-label").innerHTML = currentQuestion.C;
+    document.getElementById("option-four-label").innerHTML = currentQuestion.D;
   }
+
+  //set game details
+  document.querySelector(".question-no").innerHTML = questionNumber;
+  document.querySelector(".question-number").innerHTML =
+    formatQuestionNumber(questionNumber);
+  document.getElementById("player-score").innerHTML =
+    /*HTML*/
+    `
+   <span>${currentQuestion.score}</span>
+   `;
+
+  document.getElementById("display-question").innerHTML =
+    currentQuestion.question;
 }
 
 // function for displaying next question in the array to dom
@@ -313,7 +265,7 @@ function NextQuestion(index) {
 
   //function to open hint modal
   document.querySelector(".hint-btn").addEventListener("click", function () {
-    document.querySelector(".hint-detail").innerHTML = currentQuestion.hint;
+    document.querySelector(".hint-detail").innerHTML = currentQuestion.hints;
     document.getElementById("hint-modal").style.display = "flex";
     document.querySelector(".game-details-container").style.filter =
       "blur(5px)";
@@ -325,7 +277,7 @@ function NextQuestion(index) {
   });
 
   //function to set the question timer
-  setQuestionTimer(currentQuestion, formatTime, currentQuestion);
+  setQuestionTimer(currentQuestion, formatTime);
 
   //function to open explanation modal
   document
@@ -342,7 +294,6 @@ function checkForAnswer() {
   const currentQuestion = shuffledQuestions[indexNumber]; //gets current Question
   const currentQuestionAnswer = currentQuestion.correctOption; //gets current Question's answer
   const options = document.getElementsByName("option"); //gets all elements in dom with name of 'option' (in this the radio inputs)
-  let correctOption = null;
 
   options.forEach((option) => {
     if (option.value === currentQuestionAnswer) {
@@ -363,14 +314,9 @@ function checkForAnswer() {
 
   options.forEach((option) => {
     if (option.checked === true && option.value === currentQuestionAnswer) {
-      let span = correctOption.slice(0, -5) + "span";
-      playerScore++;
       indexNumber++;
       questionNumber++;
     } else if (option.checked && option.value !== currentQuestionAnswer) {
-      const wrongLabelId = option.labels[0].id;
-      let wrongSpan = wrongLabelId.slice(0, -5) + "span";
-      let correctSpan = correctOption.slice(0, -5) + "span";
       wrongAttempt++;
       indexNumber++;
       questionNumber++;
@@ -381,16 +327,7 @@ function checkForAnswer() {
 //check if answer is correct when the user clicks the continue button
 function checkForTick(questionTimesUp) {
   const currentQuestion = shuffledQuestions[indexNumber]; //gets current Question
-  const currentQuestionAnswer = currentQuestion.correctOption; //gets current Question's answer
   const options = document.getElementsByName("option"); //gets all elements in dom with name of 'option' (in this the radio inputs)
-  let correctOption = null;
-
-  options.forEach((option) => {
-    if (option.value === currentQuestionAnswer) {
-      //get's correct's radio input with correct answer
-      correctOption = option.labels[0].id;
-    }
-  });
 
   //checking to make sure a radio input has been checked or an option being chosen
   if (
@@ -410,7 +347,7 @@ function checkForTick(questionTimesUp) {
 
   //checking if checked radio button is same as answer, if so display tick image
   options.forEach((option) => {
-    if (option.checked && option.value !== currentQuestionAnswer) {
+    if (option.checked && option.value !== currentQuestion.ans) {
       document.querySelector(".modal-content-container img").style.display =
         "none";
     }
@@ -421,7 +358,9 @@ function checkForTick(questionTimesUp) {
     currentQuestion.explanation;
   document.querySelector(
     ".explanation-container .modal-content-container h1"
-  ).innerHTML = `${currentQuestion.ans}. ${currentQuestion.correctOption}`;
+  ).innerHTML = `${currentQuestion.ans}. ${
+    currentQuestion[currentQuestion.ans]
+  }`;
   document.getElementById("explanation-modal").style.display = "flex";
   document.querySelector(".game-details-container").style.filter = "blur(5px)";
   document.querySelector(".game-question-container").style.filter = "blur(5px)";
@@ -435,7 +374,7 @@ function handleNextQuestion() {
   unCheckRadioButtons();
 
   //delays next question displaying for a second
-  if (indexNumber <= 3) {
+  if (indexNumber < shuffledQuestions.length) {
     resetOptionBackground();
     NextQuestion(indexNumber);
   } else {
@@ -474,22 +413,10 @@ function handleEndGame() {
   let remark = null;
   let remarkColor = null;
 
-  // condition check for player remark and remark color
-  if (playerScore <= 3) {
-    remark = "Bad Grades, Keep Practicing.";
-    remarkColor = "red";
-  } else if (playerScore >= 4 && playerScore < 7) {
-    remark = "Average Grades, You can do better.";
-    remarkColor = "orange";
-  } else if (playerScore >= 7) {
-    remark = "Excellent, Keep the good work going.";
-    remarkColor = "green";
-  }
-  const playerGrade = (playerScore / 10) * 100;
-
   //data to display to score board
   //hide the questions and options (jim)
-  document.getElementById("user-score").innerHTML = playerScore;
+  document.getElementById("explanation-modal").style.display = "none";
+  document.getElementById("user-score").innerHTML = 1;
   document.getElementsByClassName(
     "modal-content-container-result"
   )[0].style.height = "35rem";
@@ -506,13 +433,17 @@ function handleEndGame() {
   document.getElementsByClassName(
     "modal-content-container-result"
   )[0].style.backgroundColor = "rgb(0, 0, 0,0)";
-  //data to display to score board
-  // document.getElementById("remarks").innerHTML = remark;
-  // document.getElementById("remarks").style.color = remarkColor;
-  // document.getElementById("grade-percentage").innerHTML = playerGrade;
-  // document.getElementById("wrong-answers").innerHTML = wrongAttempt;
-  // document.getElementById("right-answers").innerHTML = playerScore;
   document.getElementById("score-modal").style.display = "flex";
+}
+
+function formatQuestionNumber(currentQuestion) {
+  if (currentQuestion < 10) {
+    return `00${currentQuestion}`;
+  } else if (currentQuestion < 100) {
+    return `0${currentQuestion}`;
+  } else {
+    return currentQuestion;
+  }
 }
 
 //closes score modal and resets game

@@ -2,22 +2,13 @@
 // get Data from Database
 // -------------------------------------------------------------------------------------------------------------------
 let userData;
+const urlParams = new URLSearchParams(window.location.search);
+const quiz_guid = urlParams.get("quiz");
 
 (async function loadData() {
-  const res = await fetch("/user/details");
+  const res = await fetch(`/user/details/${quiz_guid}`);
   let user = await res.json();
   userData = user[0];
-
-  // const result = {
-  //   question: "Please select an animal live in the enviroment shown in photo.",
-  //   student_code: "S00001",
-  //   student_id: 1,
-  //   student_name: "波波' Lai",
-  //   student_score: 10,
-  //   time: 10,
-  //   total_question: 5,
-  //   total_score: 35,
-  // };
 
   //load student details
   document.querySelector(".user-info-container").innerHTML =
@@ -26,6 +17,9 @@ let userData;
 <span id="name">${userData.student_name}</span>
 <span id="student-code">(${userData.student_code})</span>
 `;
+
+  document.querySelector("#upper-player-score").innerHTML =
+    userData.student_score;
 
   //load quiz header
   document.querySelector(".modal-content-container h2").innerHTML =
@@ -49,3 +43,7 @@ let userData;
 <span>${userData.time}:00</span>
 `;
 })();
+
+document.querySelector("#continue").addEventListener("click", () => {
+  window.location.href = `quiz.html?quiz=${quiz_guid}`;
+});

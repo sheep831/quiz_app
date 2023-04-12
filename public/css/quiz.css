@@ -23,7 +23,8 @@ main {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* justify-content: center; */
+  justify-content: start;
   align-items: center;
   background: url("../assets/quiz-bg.png");
   background-color: black;
@@ -36,9 +37,10 @@ main {
   display: flex;
   justify-content: flex-end;
   width: 90%;
-  position: fixed;
-  top: 20px;
+  /* position: fixed;
+  top: 20px; */
   z-index: 2;
+  margin-top: 10px;
 }
 
 .game-quiz-container {
@@ -126,6 +128,7 @@ main {
   font-size: 2rem;
   font-weight: bold;
   color: white;
+  margin-right: 10px;
 }
 
 .game-question-container {
@@ -133,17 +136,17 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  height: 30vh;
+  height: 35vh;
   border-radius: 15px;
   background-color: #fff8e8;
   border-style: solid;
   border-color: #eeba53;
   border-width: 10px;
-  font-size: 42px;
+  font-size: 4vw;
 }
 
 .game-question-container h1 {
-  font-size: 28px;
+  font-size: 2.5vw;
   margin-left: 10px;
   padding: 3px;
 }
@@ -181,7 +184,7 @@ span label {
   transition: transform 0.3s;
   font-weight: 600;
   color: rgb(22, 22, 22);
-  font-size: 44px;
+  font-size: 3vw;
 }
 
 span label:hover {
@@ -206,7 +209,7 @@ input[type="radio"]:checked ~ .option {
 }
 
 .left-buttons-container {
-  width: 25%;
+  width: 33vw;
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -225,6 +228,20 @@ input[type="radio"]:checked ~ .option {
   position: absolute;
   font-size: 39px;
   color: #c44b01;
+  user-select: none;
+}
+
+.left-topbar div {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.question-number {
+  position: absolute;
+  font-size: 1.7vw;
+  color: white;
   user-select: none;
 }
 
@@ -314,7 +331,7 @@ input[type="radio"]:checked ~ .option {
 
 .hint-detail,
 .explanation-detail {
-  font-size: 25px;
+  font-size: 3vw;
   color: #40547b;
 }
 
@@ -464,7 +481,7 @@ input[type="radio"]:checked ~ .option {
   }
 
   .game-question-container {
-    height: 8rem;
+    height: 15rem;
     margin-bottom: 10px;
   }
 
@@ -473,7 +490,7 @@ input[type="radio"]:checked ~ .option {
   }
 
   .game-question-container h1 {
-    font-size: 30px;
+    font-size: 4vw;
   }
 
   .game-options-container span {
@@ -499,6 +516,15 @@ input[type="radio"]:checked ~ .option {
 
   .score-container {
     flex-direction: column;
+  }
+
+  .foot-bar {
+    flex-direction: column;
+  }
+
+  .foot-bar div {
+    justify-content: center;
+    width: 87%;
   }
 }
 
@@ -620,6 +646,7 @@ input[type="radio"]:checked ~ .option {
 .question-time-container {
   background-color: #fff5db;
   border: 1px solid #ffbc52;
+  font-size: 2.5vw;
 }
 
 .question-timer-container {

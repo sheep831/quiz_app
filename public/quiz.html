@@ -7,7 +7,7 @@
     <title>Quiz</title>
     <link rel="stylesheet" href="css/quiz.css" />
   </head>
-  <body onload="NextQuestion(0)">
+  <body>
     <main>
       <!-- Start of the user info container -->
       <div class="user-info-row">
@@ -61,7 +61,7 @@
                     src="./assets/single-star.png"
                     alt="single-star"
                   />
-                  <p id="score-x">x</p>
+                  <p id="score-x">x </p>
                   <p id="user-score"></p>
                 </div>
               </div>
@@ -87,6 +87,7 @@
           <div class="left-topbar">
             <div>
               <img src="assets/orange-circle.png" height="90px" weight="90px" />
+              <span class="question-number"></span>
             </div>
             <div class="score-container-star">
               <img
@@ -139,7 +140,7 @@
             id="option-one"
             name="option"
             class="radio"
-            value="optionA"
+            value="A"
           />
           <label for="option-one" class="option" id="option-one-label"></label>
         </span>
@@ -150,7 +151,7 @@
             id="option-two"
             name="option"
             class="radio"
-            value="optionB"
+            value="B"
           />
           <label for="option-two" class="option" id="option-two-label"></label>
         </span>
@@ -161,7 +162,7 @@
             id="option-three"
             name="option"
             class="radio"
-            value="optionC"
+            value="C"
           />
           <label
             for="option-three"
@@ -176,7 +177,7 @@
             id="option-four"
             name="option"
             class="radio"
-            value="optionD"
+            value="D"
           />
           <label
             for="option-four"
@@ -215,7 +216,6 @@
           />
         </div>
         <div class="next-button-container">
-          <!-- <button onclick="handleNextQuestion()"> -->
             <button class="continue-btn">
           </button>
         </div>

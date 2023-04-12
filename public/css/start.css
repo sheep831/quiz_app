@@ -42,16 +42,23 @@ main {
 
 .user-info-container {
   background: url("../assets/name-tag.png");
-  height: 100%;
-  width: 10%;
+  min-height: 100px;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 90%;
+  background-size: contain;
   text-align: center;
+  padding-top: 18px;
 }
 
-.user-info-container span {
+.user-container div span {
   font-size: 1rem;
+  color: #c44b01;
+  font-weight: bold;
+  user-select: none;
+}
+
+.user-container div:nth-child(2) span {
+  font-size: 2rem;
   color: #c44b01;
   font-weight: bold;
   user-select: none;
@@ -71,7 +78,8 @@ main {
   width: 10%;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: cover;
+  background-size: contain;
+  min-height: 100px;
 }
 
 .task-info {
@@ -103,11 +111,11 @@ main {
   width: auto;
   height: auto;
   position: absolute;
-  top: -62px;
+  top: -5vw;
 }
 
 .modal-content-container h1 {
-  font-size: calc(50px + 2vmin);
+  font-size: 5vw;
   font-weight: bold;
   color: #ed6d1e;
   text-align: center;
@@ -115,7 +123,7 @@ main {
 }
 
 .modal-content-container h2 {
-  font-size: calc(40px + 2vmin);
+  font-size: 4vw;
   font-weight: bold;
   height: 3rem;
   color: #253e5a;
@@ -130,7 +138,7 @@ main {
 }
 
 .quiz-details div > span {
-  font-size: calc(30px + 2vmin);
+  font-size: 3vw;
   font-weight: bold;
   color: #ed6d1e;
   user-select: none;
@@ -183,7 +191,7 @@ main {
   align-items: center;
 }
 
-.foot-bar div:nth-child(2) a {
+.foot-bar div:nth-child(2) {
   display: flex;
   justify-content: flex-end;
 }
@@ -193,4 +201,13 @@ main {
   -webkit-transform: scale(1.12);
   transform: scale(1.12);
   cursor: pointer;
+}
+
+@media (max-width: 991px) {
+  .foot-bar div a,
+  .foot-bar div:nth-child(2) a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
