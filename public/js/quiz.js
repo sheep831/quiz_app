@@ -10,7 +10,9 @@ window.onload = loadAndStart;
 // get Data from Database
 // -------------------------------------------------------------------------------------------------------------------
 let userData;
+let remainingTime;
 let questions;
+let hintCounter = 0;
 const urlParams = new URLSearchParams(window.location.search);
 const quiz_guid = urlParams.get("quiz");
 
@@ -41,25 +43,14 @@ async function loadData() {
   document.querySelector(".total-question-no").innerHTML = questions.length;
 
   //set the global timer when game starts
-  setGlobalTimer(userData.time, formatTime);
+  setGlobalTimer(userData.time);
 }
 // -------------------------------------------------------------------------------------------------------------------
 // Timer
 // -------------------------------------------------------------------------------------------------------------------
-function formatTime(milliseconds) {
-  let totalSeconds = Math.ceil(milliseconds / 1000);
-  let minutes = Math.floor(totalSeconds / 60);
-  let seconds = totalSeconds % 60;
-  return (
-    (minutes < 10 ? "0" + minutes : minutes) +
-    ":" +
-    (seconds < 10 ? "0" + seconds : seconds)
-  );
-}
-
-function setGlobalTimer(quizTime, formatTime) {
+function setGlobalTimer(quizTime) {
   let intervalId;
-  let remainingTime = quizTime * 60 * 1000;
+  remainingTime = quizTime * 60 * 1000;
 
   document.querySelector(".total-timer-container").innerHTML =
     formatTime(remainingTime);
@@ -201,11 +192,11 @@ let indexNumber = 0;
 
 function nextQuestionStage(currentQuestion) {
   //if there is question image
-  if (currentQuestion.image) {
+  if (checkMediaType(currentQuestion.A) === "image") {
     document.querySelector(".game-question-container").style.flexDirection =
       "column";
     let questionImage = document.getElementById("question-img").style;
-    questionImage.background = `url("${currentQuestion.image}")`;
+    questionImage.background = `url("${currentQuestion.image}")`; // media in question
     questionImage.height = "120px";
     questionImage.width = "150px";
     questionImage.backgroundSize = "contain";
@@ -227,7 +218,7 @@ function nextQuestionStage(currentQuestion) {
     );
     for (let i = 0; i < imageStyles.length; i++) {
       imageStyles[i].style.background = `url("${
-        currentQuestion[`image${arr[i]}`]
+        currentQuestion[`${arr[i]}`]
       }")`;
       imageStyles[i].innerText = "";
       imageStyles[i].style.height = "90px";
@@ -256,6 +247,10 @@ function nextQuestionStage(currentQuestion) {
   document.getElementById("display-question").innerHTML =
     currentQuestion.question;
 }
+
+document.querySelector(".hint-btn").addEventListener("click", function () {
+  hintCounter++;
+});
 
 // function for displaying next question in the array to dom
 function NextQuestion(index) {
@@ -290,37 +285,66 @@ function NextQuestion(index) {
   nextQuestionStage(currentQuestion);
 }
 
-function checkForAnswer() {
+async function checkForAnswer() {
   const currentQuestion = shuffledQuestions[indexNumber]; //gets current Question
-  const currentQuestionAnswer = currentQuestion.correctOption; //gets current Question's answer
+  const currentQuestionAnswer = currentQuestion.ans; //gets current Question's answer
   const options = document.getElementsByName("option"); //gets all elements in dom with name of 'option' (in this the radio inputs)
+  const timeLeft =
+    currentQuestion.time -
+    formatTimeToSeconds(
+      document.querySelector(".question-time-container").innerText
+    );
 
-  options.forEach((option) => {
-    if (option.value === currentQuestionAnswer) {
-      //get's correct's radio input with correct answer
-      correctOption = option.labels[0].id;
-    }
-  });
-
-  //check if all options are not checked
-  let optionsArr = Array.prototype.slice
-    .call(options)
-    .every((option) => option.checked === false);
+  //if all are not checked, optionsArr = true
+  let optionsArr = [...options].every((option) => !option.checked);
   if (optionsArr) {
     wrongAttempt++;
     indexNumber++;
     questionNumber++;
+    await fetch(`/quiz/result`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        quiz_guid: currentQuestion.quiz_guid,
+        idx: currentQuestion.idx,
+        time: currentQuestion.time,
+        student_ans: "-",
+        hints: hintCounter,
+      }),
+    });
   }
 
-  options.forEach((option) => {
-    if (option.checked === true && option.value === currentQuestionAnswer) {
+  options.forEach(async (option) => {
+    if (option.checked) {
       indexNumber++;
       questionNumber++;
-    } else if (option.checked && option.value !== currentQuestionAnswer) {
-      wrongAttempt++;
-      indexNumber++;
-      questionNumber++;
+      await fetch(`/quiz/result`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quiz_guid: currentQuestion.quiz_guid,
+          idx: currentQuestion.idx,
+          time: timeLeft,
+          student_ans: option.value,
+          hints: hintCounter,
+        }),
+      });
     }
+
+    // if (option.checked && option.value === currentQuestionAnswer) {
+    //   console.log("correct");
+    //   indexNumber++;
+    //   questionNumber++;
+    // } else if (option.checked && option.value !== currentQuestionAnswer) {
+    //   console.log("wrong");
+    //   wrongAttempt++;
+    //   indexNumber++;
+    //   questionNumber++;
+    // }
   });
 }
 
@@ -373,7 +397,6 @@ function handleNextQuestion() {
   checkForAnswer();
   unCheckRadioButtons();
 
-  //delays next question displaying for a second
   if (indexNumber < shuffledQuestions.length) {
     resetOptionBackground();
     NextQuestion(indexNumber);
@@ -382,6 +405,7 @@ function handleNextQuestion() {
   }
   closeExplanationModal();
 
+  hintCounter = 0;
   document.querySelector(".modal-content-container img").style.display =
     "block"; //show tick image
 }
@@ -409,14 +433,22 @@ function unCheckRadioButtons() {
 }
 
 // function for when all questions being answered
-function handleEndGame() {
-  let remark = null;
-  let remarkColor = null;
+async function handleEndGame() {
+  //get the quiz result score
+  const res = await fetch(`/quiz/details/${quiz_guid}`);
+  const result = await res.json();
+  let student_score = sumStudentScores(result);
 
   //data to display to score board
+  document.getElementById("timer-time").innerText = getTimeSpent(
+    remainingTime,
+    userData.time
+  );
+
+  document.getElementById("user-score").innerHTML = student_score;
+
   //hide the questions and options (jim)
   document.getElementById("explanation-modal").style.display = "none";
-  document.getElementById("user-score").innerHTML = 1;
   document.getElementsByClassName(
     "modal-content-container-result"
   )[0].style.height = "35rem";
@@ -429,21 +461,10 @@ function handleEndGame() {
     "none";
   document.getElementsByClassName("score-container")[0].style.display = "none";
   document.getElementsByClassName("foot-bar")[0].style.display = "none";
-
   document.getElementsByClassName(
     "modal-content-container-result"
   )[0].style.backgroundColor = "rgb(0, 0, 0,0)";
   document.getElementById("score-modal").style.display = "flex";
-}
-
-function formatQuestionNumber(currentQuestion) {
-  if (currentQuestion < 10) {
-    return `00${currentQuestion}`;
-  } else if (currentQuestion < 100) {
-    return `0${currentQuestion}`;
-  } else {
-    return currentQuestion;
-  }
 }
 
 //closes score modal and resets game
@@ -456,4 +477,63 @@ document
 //function to close warning modal
 function closeOptionModal() {
   document.getElementById("option-modal").style.display = "none";
+}
+// -------------------------------------------------------------------------------------------------------------------
+//  Utils
+// -------------------------------------------------------------------------------------------------------------------
+function formatTime(milliseconds) {
+  let totalSeconds = Math.ceil(milliseconds / 1000);
+  let minutes = Math.floor(totalSeconds / 60);
+  let seconds = totalSeconds % 60;
+  return (
+    (minutes < 10 ? "0" + minutes : minutes) +
+    ":" +
+    (seconds < 10 ? "0" + seconds : seconds)
+  );
+}
+
+function formatQuestionNumber(currentQuestion) {
+  if (currentQuestion < 10) {
+    return `00${currentQuestion}`;
+  } else if (currentQuestion < 100) {
+    return `0${currentQuestion}`;
+  } else {
+    return currentQuestion;
+  }
+}
+
+function getTimeSpent(remainingTime, quizTime) {
+  const timeSpent = quizTime * 60 * 1000 - remainingTime;
+  const minutes = Math.floor(timeSpent / 60000);
+  const seconds = Math.floor((timeSpent % 60000) / 1000);
+  return `${minutes.toString().padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+function formatTimeToSeconds(timeString) {
+  const timeArr = timeString.split(":");
+  const minutes = parseInt(timeArr[0]);
+  const seconds = parseInt(timeArr[1]);
+  return minutes * 60 + seconds;
+}
+
+function checkMediaType(media) {
+  if (/\.(jpg|png|tif)$/i.test(media)) {
+    return "image";
+  } else if (/\.(mp3|ogg)$/i.test(media)) {
+    return "audio";
+  } else if (/\.(mp4)$/i.test(media)) {
+    return "video";
+  } else {
+    return "unknown";
+  }
+}
+
+function sumStudentScores(arr) {
+  let sum = 0;
+  for (let i = 0; i < arr.length; i++) {
+    sum += arr[i].student_score;
+  }
+  return sum;
 }

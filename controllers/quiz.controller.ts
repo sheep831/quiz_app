@@ -47,8 +47,7 @@ export class QuizController {
     try {
       let query =
         "EXEC sp_app_update_question @quiz_guid=?, @idx=?, @time=?, @student_ans=?, @hints=?";
-      const quiz_guid = "a29bb697-1f6d-453a-a998-1d15499297cb";
-
+      const quiz_guid = req.body.quiz_guid;
       const time = req.body.time;
       const idx = req.body.idx;
       const student_ans = req.body.student_ans;

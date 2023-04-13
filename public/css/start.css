@@ -84,7 +84,6 @@ main {
 
 .task-info {
   width: 80%;
-  height: 334px;
 }
 
 .modal-content-container {
@@ -114,6 +113,11 @@ main {
   top: -5vw;
 }
 
+.question-container {
+  min-height: 288px;
+  padding-top: 6vw;
+}
+
 .modal-content-container h1 {
   font-size: 5vw;
   font-weight: bold;
@@ -122,11 +126,18 @@ main {
   margin: 0 50px;
 }
 
+.media {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
 .modal-content-container h2 {
-  font-size: 4vw;
+  font-size: 2.5vw;
   font-weight: bold;
-  height: 3rem;
   color: #253e5a;
+  display: flex;
+  justify-content: center;
   text-align: center;
 }
 

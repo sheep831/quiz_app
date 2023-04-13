@@ -42,8 +42,32 @@ const quiz_guid = urlParams.get("quiz");
     `
 <span>${userData.time}:00</span>
 `;
+
+  // set media
+  if (checkMediaType(userData.midea) === "video") {
+    document.querySelector(".media").innerHTML =
+      /*HTML*/
+      `
+      <video width="320" height="240" controls>
+      <source src="${userData.midea}" type="video/mp4">
+
+      </video>`;
+  }
+  s;
 })();
 
 document.querySelector("#continue").addEventListener("click", () => {
   window.location.href = `quiz.html?quiz=${quiz_guid}`;
 });
+
+function checkMediaType(media) {
+  if (/\.(jpg|png|tif)$/i.test(media)) {
+    return "image";
+  } else if (/\.(mp3|ogg)$/i.test(media)) {
+    return "audio";
+  } else if (/\.(mp4)$/i.test(media)) {
+    return "video";
+  } else {
+    return "unknown";
+  }
+}
