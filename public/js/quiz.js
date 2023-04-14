@@ -1,7 +1,7 @@
 // Define a function to fetch data and then execute the NextQuestion function
 async function loadAndStart() {
   await loadData();
-  NextQuestion(0);
+  NextQuestion();
 }
 
 window.onload = loadAndStart;
@@ -12,7 +12,13 @@ window.onload = loadAndStart;
 let userData;
 let remainingTime;
 let questions;
+let questionSets;
 let hintCounter = 0;
+let correctAnswers = 0;
+let currentSetIndex = 0;
+let retryQuestions = [];
+let currentQuestionIndex = 0;
+let currentQuestion;
 const urlParams = new URLSearchParams(window.location.search);
 const quiz_guid = urlParams.get("quiz");
 
@@ -25,6 +31,8 @@ async function loadData() {
     const data = await Promise.all(res.map((item) => item.json()));
     userData = data[0][0];
     questions = data[1];
+    questionSets = divideQuestionsIntoSets(questions);
+    currentQuestion = questionSets[currentSetIndex][currentQuestionIndex];
   } catch (e) {
     console.log(e);
   }
@@ -74,7 +82,7 @@ function setGlobalTimer(quizTime) {
 // -------------------------------------------------------------------------------------------------------------------
 // set question Timer-bar
 // -------------------------------------------------------------------------------------------------------------------
-function setQuestionTimer(currentQuestion, formatTime) {
+function setQuestionTimer() {
   let remainingTime = currentQuestion.time * 1000;
   let timeLimit = currentQuestion.time;
   let continueClicked = false;
@@ -153,19 +161,7 @@ function closeExplanationModal() {
 // -------------------------------------------------------------------------------------------------------------------
 //  Main functions
 // -------------------------------------------------------------------------------------------------------------------
-
-let shuffledQuestions = []; //empty array to hold shuffled selected questions
 let timeIsUp = false;
-
-function handleQuestions() {
-  //function to shuffle and push questions to shuffledQuestions array
-  while (shuffledQuestions.length < questions.length) {
-    const random = questions[Math.floor(Math.random() * questions.length)];
-    if (!shuffledQuestions.includes(random)) {
-      shuffledQuestions.push(random);
-    }
-  }
-}
 
 // checked option to be highlighted
 let radios = document.querySelectorAll("input[type=radio]");
@@ -186,24 +182,24 @@ for (let i = 0; i < radios.length; i++) {
   });
 }
 
-let questionNumber = 1;
-let wrongAttempt = 0;
-let indexNumber = 0;
+// count the hints clicked
+document.querySelector(".hint-btn").addEventListener("click", function () {
+  hintCounter++;
+});
 
-function nextQuestionStage(currentQuestion) {
-  //if there is question image
+//function to open explanation modal
+document.querySelector(".continue-btn").addEventListener("click", function () {
+  continueClicked = true;
+  checkForTick(false); // times up is not related here
+});
+
+// set next question stage
+function nextQuestionStage() {
+  //function to set the question timer
+  setQuestionTimer();
+
+  //if there is image
   if (checkMediaType(currentQuestion.A) === "image") {
-    document.querySelector(".game-question-container").style.flexDirection =
-      "column";
-    let questionImage = document.getElementById("question-img").style;
-    questionImage.background = `url("${currentQuestion.image}")`; // media in question
-    questionImage.height = "120px";
-    questionImage.width = "150px";
-    questionImage.backgroundSize = "contain";
-    questionImage.backgroundRepeat = "no-repeat";
-    questionImage.marginTop = "15px";
-    questionImage.minHeight = "100px";
-
     const options = document.querySelectorAll(".game-options-container span");
     for (const option of options) {
       option.style.display = "flex";
@@ -234,31 +230,7 @@ function nextQuestionStage(currentQuestion) {
     document.getElementById("option-four-label").innerHTML = currentQuestion.D;
   }
 
-  //set game details
-  document.querySelector(".question-no").innerHTML = questionNumber;
-  document.querySelector(".question-number").innerHTML =
-    formatQuestionNumber(questionNumber);
-  document.getElementById("player-score").innerHTML =
-    /*HTML*/
-    `
-   <span>${currentQuestion.score}</span>
-   `;
-
-  document.getElementById("display-question").innerHTML =
-    currentQuestion.question;
-}
-
-document.querySelector(".hint-btn").addEventListener("click", function () {
-  hintCounter++;
-});
-
-// function for displaying next question in the array to dom
-function NextQuestion(index) {
-  handleQuestions();
-  const currentQuestion = shuffledQuestions[index];
-  document.getElementById("question-img").style = "";
-
-  //function to open hint modal
+  //set the hint modal
   document.querySelector(".hint-btn").addEventListener("click", function () {
     document.querySelector(".hint-detail").innerHTML = currentQuestion.hints;
     document.getElementById("hint-modal").style.display = "flex";
@@ -271,22 +243,54 @@ function NextQuestion(index) {
     document.querySelector(".foot-bar").style.filter = "blur(5px)";
   });
 
-  //function to set the question timer
-  setQuestionTimer(currentQuestion, formatTime);
+  //set game details
+  document.querySelector(".question-no").innerHTML =
+    getCurrentQuestionIndex(currentQuestion);
+  document.querySelector(".question-number").innerHTML = formatQuestionNumber(
+    getCurrentQuestionIndex(currentQuestion)
+  );
+  document.getElementById("question-score").innerHTML =
+    /*HTML*/
+    `
+   <span>${currentQuestion.score}</span>
+   `;
 
-  //function to open explanation modal
-  document
-    .querySelector(".continue-btn")
-    .addEventListener("click", function () {
-      continueClicked = true;
-      checkForTick(false); // times up is not related here
-    });
+  document.getElementById("display-question").innerHTML =
+    currentQuestion.question;
+}
 
-  nextQuestionStage(currentQuestion);
+// function for choosing next question
+async function NextQuestion() {
+  currentQuestion = questionSets[currentSetIndex][currentQuestionIndex];
+  console.log(currentQuestion);
+
+  if (currentQuestionIndex >= 5) {
+    if (retryQuestions.length > 0) {
+      console.log("do retry questions");
+      const retryQuestion = retryQuestions[0];
+      retryQuestion["redo"] = true;
+      currentQuestion = retryQuestion;
+      console.log(currentQuestion);
+      nextQuestionStage();
+      return;
+    } else {
+      // next set
+      console.log("finish all retry");
+      currentSetIndex++;
+      currentQuestionIndex = 0;
+      currentQuestion = questionSets[currentSetIndex][currentQuestionIndex];
+    }
+  }
+
+  console.log(currentSetIndex);
+
+  console.log(currentQuestionIndex);
+
+  nextQuestionStage();
 }
 
 async function checkForAnswer() {
-  const currentQuestion = shuffledQuestions[indexNumber]; //gets current Question
+  let selectedOption;
   const currentQuestionAnswer = currentQuestion.ans; //gets current Question's answer
   const options = document.getElementsByName("option"); //gets all elements in dom with name of 'option' (in this the radio inputs)
   const timeLeft =
@@ -298,9 +302,11 @@ async function checkForAnswer() {
   //if all are not checked, optionsArr = true
   let optionsArr = [...options].every((option) => !option.checked);
   if (optionsArr) {
-    wrongAttempt++;
-    indexNumber++;
-    questionNumber++;
+    console.log("no option selected");
+    if (!currentQuestion.redo) {
+      retryQuestions.push(currentQuestion);
+      currentQuestionIndex++;
+    }
     await fetch(`/quiz/result`, {
       method: "PUT",
       headers: {
@@ -316,10 +322,9 @@ async function checkForAnswer() {
     });
   }
 
-  options.forEach(async (option) => {
+  for (const option of options) {
     if (option.checked) {
-      indexNumber++;
-      questionNumber++;
+      selectedOption = option;
       await fetch(`/quiz/result`, {
         method: "PUT",
         headers: {
@@ -334,23 +339,28 @@ async function checkForAnswer() {
         }),
       });
     }
-
-    // if (option.checked && option.value === currentQuestionAnswer) {
-    //   console.log("correct");
-    //   indexNumber++;
-    //   questionNumber++;
-    // } else if (option.checked && option.value !== currentQuestionAnswer) {
-    //   console.log("wrong");
-    //   wrongAttempt++;
-    //   indexNumber++;
-    //   questionNumber++;
-    // }
-  });
+  }
+  if (selectedOption) {
+    if (selectedOption.value === currentQuestionAnswer) {
+      console.log("correct");
+      correctAnswers++;
+      if (currentQuestion.redo) {
+        retryQuestions.splice(0, 1);
+      } else {
+        currentQuestionIndex++;
+      }
+    } else {
+      console.log("wrong");
+      if (!currentQuestion.redo) {
+        retryQuestions.push(currentQuestion);
+        currentQuestionIndex++;
+      }
+    }
+  }
 }
 
 //check if answer is correct when the user clicks the continue button
 function checkForTick(questionTimesUp) {
-  const currentQuestion = shuffledQuestions[indexNumber]; //gets current Question
   const options = document.getElementsByName("option"); //gets all elements in dom with name of 'option' (in this the radio inputs)
 
   //checking to make sure a radio input has been checked or an option being chosen
@@ -361,7 +371,7 @@ function checkForTick(questionTimesUp) {
     options[3].checked == false
   ) {
     if (questionTimesUp) {
-      document.querySelector(".modal-content-container img").style.display =
+      document.querySelector(".modal-content-container > img").style.display =
         "none";
     } else {
       document.getElementById("option-modal").style.display = "flex";
@@ -369,10 +379,10 @@ function checkForTick(questionTimesUp) {
     }
   }
 
-  //checking if checked radio button is same as answer, if so display tick image
+  //checking if checked radio button is same as answer, if no hide the tick
   options.forEach((option) => {
     if (option.checked && option.value !== currentQuestion.ans) {
-      document.querySelector(".modal-content-container img").style.display =
+      document.querySelector(".modal-content-container > img").style.display =
         "none";
     }
   });
@@ -392,37 +402,20 @@ function checkForTick(questionTimesUp) {
   document.querySelector(".foot-bar").style.filter = "blur(5px)";
 }
 
-//called when the continue button is clicked
-function handleNextQuestion() {
-  checkForAnswer();
-  unCheckRadioButtons();
-
-  if (indexNumber < shuffledQuestions.length) {
-    resetOptionBackground();
-    NextQuestion(indexNumber);
-  } else {
-    handleEndGame();
-  }
-  closeExplanationModal();
-
-  hintCounter = 0;
-  document.querySelector(".modal-content-container img").style.display =
-    "block"; //show tick image
-}
-
-//sets options background back to null after display the right/wrong colors
-function resetOptionBackground() {
+function resetStage() {
+  //reset options background back to null
   const options = document.getElementsByName("option");
   options.forEach((option) => {
     document.getElementById(option.labels[0].id).style.background = "";
     document.getElementById(option.labels[0].id).style.height = "100%";
     document.getElementById(option.labels[0].id).style.width = "100%";
   });
-}
 
-// unchecking all radio buttons for next question(can be done with map or foreach loop also)
-function unCheckRadioButtons() {
-  const options = document.getElementsByName("option");
+  hintCounter = 0;
+  document.querySelector(".modal-content-container > img").style.display =
+    "block"; //show tick image
+
+  //reset radio buttons back to unchecked
   for (let i = 0; i < options.length; i++) {
     options[i].checked = false;
   }
@@ -430,6 +423,19 @@ function unCheckRadioButtons() {
   for (const span of spans) {
     span.style.backgroundColor = "white";
   }
+}
+
+//called when the continue button is clicked
+async function handleNextQuestion() {
+  await checkForAnswer();
+
+  if (correctAnswers < questions.length) {
+    resetStage();
+    NextQuestion();
+  } else {
+    handleEndGame();
+  }
+  closeExplanationModal();
 }
 
 // function for when all questions being answered
@@ -536,4 +542,23 @@ function sumStudentScores(arr) {
     sum += arr[i].student_score;
   }
   return sum;
+}
+
+function divideQuestionsIntoSets(questions) {
+  const questionSets = [];
+  let currentSet = [];
+  for (let i = 0; i < questions.length; i++) {
+    currentSet.push(questions[i]);
+    if (currentSet.length === 5 || i === questions.length - 1) {
+      questionSets.push(currentSet);
+      currentSet = [];
+    }
+  }
+  return questionSets;
+}
+
+function getCurrentQuestionIndex(question) {
+  const flattenedQuestionSets = questionSets.flat();
+  const index = flattenedQuestionSets.indexOf(question);
+  return index + 1;
 }
