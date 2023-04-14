@@ -99,6 +99,7 @@ main {
   align-items: center;
   justify-content: space-around;
   position: relative;
+  margin-bottom: 10px;
 }
 
 .modal-content-container .title {
@@ -115,7 +116,7 @@ main {
 
 .question-container {
   min-height: 288px;
-  padding-top: 6vw;
+  padding-top: 4vw;
 }
 
 .modal-content-container h1 {
@@ -124,12 +125,13 @@ main {
   color: #ed6d1e;
   text-align: center;
   margin: 0 50px;
+  user-select: none;
 }
 
 .media {
   display: flex;
   justify-content: center;
-  margin-bottom: 10px;
+  margin: 15px 0;
 }
 
 .modal-content-container h2 {

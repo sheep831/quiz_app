@@ -262,29 +262,22 @@ function nextQuestionStage() {
 // function for choosing next question
 async function NextQuestion() {
   currentQuestion = questionSets[currentSetIndex][currentQuestionIndex];
-  console.log(currentQuestion);
+  let idx = currentSetIndex * 5 + currentQuestionIndex + 1;
 
-  if (currentQuestionIndex >= 5) {
+  if (currentQuestionIndex >= 5 || idx > questions.length) {
     if (retryQuestions.length > 0) {
-      console.log("do retry questions");
       const retryQuestion = retryQuestions[0];
       retryQuestion["redo"] = true;
       currentQuestion = retryQuestion;
-      console.log(currentQuestion);
       nextQuestionStage();
       return;
     } else {
       // next set
-      console.log("finish all retry");
       currentSetIndex++;
       currentQuestionIndex = 0;
       currentQuestion = questionSets[currentSetIndex][currentQuestionIndex];
     }
   }
-
-  console.log(currentSetIndex);
-
-  console.log(currentQuestionIndex);
 
   nextQuestionStage();
 }
@@ -302,7 +295,6 @@ async function checkForAnswer() {
   //if all are not checked, optionsArr = true
   let optionsArr = [...options].every((option) => !option.checked);
   if (optionsArr) {
-    console.log("no option selected");
     if (!currentQuestion.redo) {
       retryQuestions.push(currentQuestion);
       currentQuestionIndex++;
@@ -342,7 +334,6 @@ async function checkForAnswer() {
   }
   if (selectedOption) {
     if (selectedOption.value === currentQuestionAnswer) {
-      console.log("correct");
       correctAnswers++;
       if (currentQuestion.redo) {
         retryQuestions.splice(0, 1);
@@ -350,7 +341,6 @@ async function checkForAnswer() {
         currentQuestionIndex++;
       }
     } else {
-      console.log("wrong");
       if (!currentQuestion.redo) {
         retryQuestions.push(currentQuestion);
         currentQuestionIndex++;
@@ -390,11 +380,26 @@ function checkForTick(questionTimesUp) {
   // display explanation modal
   document.querySelector(".explanation-detail").innerHTML =
     currentQuestion.explanation;
+
   document.querySelector(
-    ".explanation-container .modal-content-container h1"
+    ".explanation-container .modal-content-container .explanation-header"
   ).innerHTML = `${currentQuestion.ans}. ${
     currentQuestion[currentQuestion.ans]
   }`;
+
+  // if the ans contains image
+  if (checkMediaType(currentQuestion[currentQuestion.ans]) === "image") {
+    const explanationHeaderImage = document.querySelector(
+      ".explanation-header"
+    );
+
+    document.querySelector(
+      ".explanation-container .modal-content-container .explanation-header"
+    ).innerHTML = `${currentQuestion.ans}. <img src="${
+      currentQuestion[currentQuestion.ans]
+    }" height="60px" width="80px">`;
+  }
+
   document.getElementById("explanation-modal").style.display = "flex";
   document.querySelector(".game-details-container").style.filter = "blur(5px)";
   document.querySelector(".game-question-container").style.filter = "blur(5px)";

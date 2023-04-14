@@ -52,8 +52,12 @@ const quiz_guid = urlParams.get("quiz");
       <source src="${userData.midea}" type="video/mp4">
 
       </video>`;
+  } else if (checkMediaType(userData.midea) === "image") {
+    document.querySelector(".media").innerHTML =
+      /*HTML*/
+      `
+      <img src="${userData.midea}" alt="image" width="320" height="240" />`;
   }
-  s;
 })();
 
 document.querySelector("#continue").addEventListener("click", () => {
