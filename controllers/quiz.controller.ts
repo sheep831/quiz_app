@@ -8,7 +8,6 @@ export class QuizController {
 
   user_details = async (req: express.Request, res: express.Response) => {
     let query = "EXEC sp_app_get_student_quiz_Header @quiz_guid=?";
-    // const quiz_guid = "a29bb697-1f6d-453a-a998-1d15499297cb";
     const quiz_guid = req.params.id;
     try {
       await sql.query(db, query, [quiz_guid], (error, results) => {

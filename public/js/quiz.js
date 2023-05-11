@@ -19,6 +19,7 @@ let currentSetIndex = 0;
 let retryQuestions = [];
 let currentQuestionIndex = 0;
 let currentQuestion;
+let questionsPerSet = 10;
 const urlParams = new URLSearchParams(window.location.search);
 const quiz_guid = urlParams.get("quiz");
 
@@ -30,7 +31,10 @@ async function loadData() {
     ]);
     const data = await Promise.all(res.map((item) => item.json()));
     userData = data[0][0];
-    questions = data[1];
+    questions = data[1].filter(
+      (question) =>
+        question.student_ans === null || question.student_ans === "-"
+    );
     questionSets = divideQuestionsIntoSets(questions);
     currentQuestion = questionSets[currentSetIndex][currentQuestionIndex];
   } catch (e) {
@@ -105,16 +109,9 @@ function setQuestionTimer() {
       }
     });
 
-  // set the numerical timer beside the progress bar
+  // set the numerical timer
   document.querySelector(".question-time-container").innerText =
     formatTime(remainingTime);
-
-  // Get the progress bar element
-  let progressBar = document.getElementById("progressBar");
-
-  // Set the width of the green bar to 100%
-  let progress = progressBar.querySelector("div");
-  progress.style.width = "100%";
 
   let timerId = setInterval(() => {
     remainingTime -= 10;
@@ -126,13 +123,10 @@ function setQuestionTimer() {
     if (questionTimesUp || (continueClicked && !noOptionSelected)) {
       // if time is up or question is answered
       clearInterval(timerId);
-      progress.style.width = "0%";
       checkForTick(questionTimesUp);
     } else {
       document.querySelector(".question-time-container").innerHTML =
         formatTime(remainingTime);
-      progress.style.width =
-        (remainingTime / (currentQuestion.time * 1000)) * 100 + "%";
     }
   }, 10);
 }
@@ -223,7 +217,31 @@ function nextQuestionStage() {
       imageStyles[i].style.backgroundRepeat = "no-repeat";
       imageStyles[i].style.backgroundPosition = "center";
     }
+  } else if (checkMediaType(currentQuestion.A) === "audio") {
+    // if there is audio
+    const options = document.querySelectorAll(".game-options-container span");
+    for (const option of options) {
+      option.style.display = "flex";
+      option.style.justifyContent = "center";
+      option.style.alignItems = "center";
+    }
+
+    const arr = ["A", "B", "C", "D"];
+
+    let audioStyles = document.querySelectorAll(
+      ".game-options-container span label"
+    );
+    for (let i = 0; i < audioStyles.length; i++) {
+      audioStyles[i].innerHTML =
+        /*HTML*/
+        `<audio controls>
+    <source src="${currentQuestion[`${arr[i]}`]}" type="audio/ogg">
+    <source src="${currentQuestion[`${arr[i]}`]}" type="audio/mpeg">
+  Your browser does not support the audio element.
+  </audio>`;
+    }
   } else {
+    // if options are plain text
     document.getElementById("option-one-label").innerHTML = currentQuestion.A;
     document.getElementById("option-two-label").innerHTML = currentQuestion.B;
     document.getElementById("option-three-label").innerHTML = currentQuestion.C;
@@ -255,16 +273,46 @@ function nextQuestionStage() {
    <span>${currentQuestion.score}</span>
    `;
 
-  document.getElementById("display-question").innerHTML =
-    currentQuestion.question;
+  // check question title type
+  if (checkMediaType(currentQuestion.question) === "audio") {
+    document.getElementById("display-question").innerHTML =
+      /*HTML*/
+      `<audio controls>
+    <source src="${currentQuestion.question}" type="audio/ogg">
+    <source src="${currentQuestion.question}" type="audio/mpeg">
+  Your browser does not support the audio element.
+  </audio>`;
+
+    keepTrackOfAudios();
+  } else if (checkMediaType(currentQuestion.question) === "video") {
+    document.getElementById("display-question").innerHTML =
+      /*HTML*/
+      `
+      <div id="light">
+        <a class="boxclose" id="boxclose" onclick="lightbox_close();"></a>
+          <video id="VisaChipCardVideo" width="600" controls>
+            <source src="${currentQuestion.question}" type="video/mp4">
+          </video>
+      </div>
+
+      <div id="fade" onClick="lightbox_close();"></div>
+
+      <div>
+        <img style="cursor: pointer;" src="../assets/play_button.png" onclick="lightbox_open();" />
+      </div>
+      `;
+  } else {
+    document.getElementById("display-question").innerHTML =
+      currentQuestion.question;
+  }
 }
 
 // function for choosing next question
 async function NextQuestion() {
   currentQuestion = questionSets[currentSetIndex][currentQuestionIndex];
-  let idx = currentSetIndex * 5 + currentQuestionIndex + 1;
+  let idx = currentSetIndex * questionsPerSet + currentQuestionIndex + 1;
 
-  if (currentQuestionIndex >= 5 || idx > questions.length) {
+  if (currentQuestionIndex >= questionsPerSet || idx > questions.length) {
     if (retryQuestions.length > 0) {
       const retryQuestion = retryQuestions[0];
       retryQuestion["redo"] = true;
@@ -389,15 +437,18 @@ function checkForTick(questionTimesUp) {
 
   // if the ans contains image
   if (checkMediaType(currentQuestion[currentQuestion.ans]) === "image") {
-    const explanationHeaderImage = document.querySelector(
-      ".explanation-header"
-    );
-
     document.querySelector(
       ".explanation-container .modal-content-container .explanation-header"
     ).innerHTML = `${currentQuestion.ans}. <img src="${
       currentQuestion[currentQuestion.ans]
     }" height="60px" width="80px">`;
+  } else if (
+    checkMediaType(currentQuestion[currentQuestion.ans]) === "audio" ||
+    checkMediaType(currentQuestion[currentQuestion.ans]) === "video"
+  ) {
+    document.querySelector(
+      ".explanation-container .modal-content-container .explanation-header"
+    ).innerHTML = currentQuestion.ans;
   }
 
   document.getElementById("explanation-modal").style.display = "flex";
@@ -554,7 +605,7 @@ function divideQuestionsIntoSets(questions) {
   let currentSet = [];
   for (let i = 0; i < questions.length; i++) {
     currentSet.push(questions[i]);
-    if (currentSet.length === 5 || i === questions.length - 1) {
+    if (currentSet.length === questionsPerSet || i === questions.length - 1) {
       questionSets.push(currentSet);
       currentSet = [];
     }
@@ -566,4 +617,41 @@ function getCurrentQuestionIndex(question) {
   const flattenedQuestionSets = questionSets.flat();
   const index = flattenedQuestionSets.indexOf(question);
   return index + 1;
+}
+
+function keepTrackOfAudios() {
+  document.addEventListener(
+    "play",
+    function (e) {
+      let audios = document.getElementsByTagName("audio");
+      for (var i = 0, len = audios.length; i < len; i++) {
+        if (audios[i] != e.target) {
+          audios[i].pause();
+        }
+      }
+    },
+    true
+  );
+}
+
+// play video in lightbox
+window.document.onkeydown = function (e) {
+  if (e.keyCode == 27) {
+    lightbox_close();
+  }
+};
+
+function lightbox_open() {
+  var lightBoxVideo = document.getElementById("VisaChipCardVideo");
+  window.scrollTo(0, 0);
+  document.getElementById("light").style.display = "block";
+  document.getElementById("fade").style.display = "block";
+  lightBoxVideo.play();
+}
+
+function lightbox_close() {
+  var lightBoxVideo = document.getElementById("VisaChipCardVideo");
+  document.getElementById("light").style.display = "none";
+  document.getElementById("fade").style.display = "none";
+  lightBoxVideo.pause();
 }

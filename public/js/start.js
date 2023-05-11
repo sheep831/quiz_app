@@ -48,21 +48,46 @@ const quiz_guid = urlParams.get("quiz");
     document.querySelector(".media").innerHTML =
       /*HTML*/
       `
-      <video width="320" height="240" controls>
-      <source src="${userData.midea}" type="video/mp4">
+      <div id="light">
+        <a class="boxclose" id="boxclose" onclick="lightbox_close();"></a>
+          <video id="VisaChipCardVideo" width="600" controls>
+            <source src="${userData.midea}" type="video/mp4">
+          </video>
+      </div>
 
-      </video>`;
+      <div id="fade" onClick="lightbox_close();"></div>
+
+      <div>
+        <img style="cursor: pointer;" src="../assets/play_button.png" onclick="lightbox_open();" />
+      </div>
+
+
+      `;
   } else if (checkMediaType(userData.midea) === "image") {
     document.querySelector(".media").innerHTML =
       /*HTML*/
       `
-      <img src="${userData.midea}" alt="image" width="320" height="240" />`;
+      <img src="${userData.midea}" alt="image" width="20%" height="15%" />`;
+  } else if (checkMediaType(userData.midea) === "audio") {
+    document.querySelector(".media").innerHTML =
+      /*HTML*/
+      `
+    <audio controls>
+    <source src="${userData.midea}" type="audio/ogg">
+    <source src="${userData.midea}" type="audio/mpeg">
+  Your browser does not support the audio element.
+  </audio>
+    `;
   }
 })();
 
 document.querySelector("#continue").addEventListener("click", () => {
   window.location.href = `quiz.html?quiz=${quiz_guid}`;
 });
+
+// -------------------------------------------------------------------------------------------------------------------
+// Utils
+// -------------------------------------------------------------------------------------------------------------------
 
 function checkMediaType(media) {
   if (/\.(jpg|png|tif)$/i.test(media)) {
@@ -74,4 +99,25 @@ function checkMediaType(media) {
   } else {
     return "unknown";
   }
+}
+
+window.document.onkeydown = function (e) {
+  if (e.keyCode == 27) {
+    lightbox_close();
+  }
+};
+
+function lightbox_open() {
+  var lightBoxVideo = document.getElementById("VisaChipCardVideo");
+  window.scrollTo(0, 0);
+  document.getElementById("light").style.display = "block";
+  document.getElementById("fade").style.display = "block";
+  lightBoxVideo.play();
+}
+
+function lightbox_close() {
+  var lightBoxVideo = document.getElementById("VisaChipCardVideo");
+  document.getElementById("light").style.display = "none";
+  document.getElementById("fade").style.display = "none";
+  lightBoxVideo.pause();
 }
