@@ -70,4 +70,23 @@ export class QuizController {
       res.status(500).send("Internal Server Error");
     }
   };
+
+  next_quiz = async (req: express.Request, res: express.Response) => {
+    let query = "EXEC sp_app_get_student_quiz @student_id=?, @date=?";
+    const studentId: number = parseInt(req.params.studentId);
+    const date = req.query.date as string;
+    try {
+      await sql.query(db, query, [studentId, date], (error, results) => {
+        if (!error) {
+          if (debug) {
+            res.json(results);
+          }
+        } else {
+          console.log(error);
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 }

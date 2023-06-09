@@ -23,7 +23,7 @@ main {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: start;
+  justify-content: center;
   align-items: center;
   background: url("../assets/quiz-bg.png");
   background-color: black;
@@ -84,18 +84,20 @@ main {
   background: url("../assets/name-tag.png");
   height: 51px;
   width: 163px;
+  display: block !important;
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
   text-align: center;
+  padding-top: 0.5vw;
 }
 
 .user-info-container span {
   font-size: 1.25vw;
+  display: block;
   color: #c44b01;
   font-weight: bold;
   user-select: none;
-  padding-top: 0.5vw;
 }
 
 .player-score-container {
@@ -328,7 +330,12 @@ input[type="radio"]:checked ~ .option {
 .hint-detail {
   font-size: 3vw;
   color: #40547b;
-  overflow: scroll;
+  width: 90%;
+  word-wrap: break-word;
+  overflow-y: scroll;
+  display: flex;
+  justify-content: center;
+  align-item: center;
 }
 
 .explanation-header {
@@ -449,7 +456,7 @@ input[type="radio"]:checked ~ .option {
 @media (350px <= width <= 700px) {
   main {
     width: 100%;
-    min-height: 100vh;
+    max-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;

@@ -45,7 +45,7 @@ async function loadData() {
   document.querySelector(".user-info-container").innerHTML =
     /*HTML*/
     `
-    <span>${userData.student_name}</span><br>
+    <span>${userData.student_name}</span>
     <span>(${userData.student_code})</span>
     `;
 
@@ -168,8 +168,8 @@ for (let i = 0; i < radios.length; i++) {
 
       for (let j = 0; j < radios.length; j++) {
         if (radios[j].id != id) {
-          let span = document.getElementById(radios[j].id + "-span");
-          span.style.backgroundColor = "white";
+          let otherSpan = document.getElementById(radios[j].id + "-span");
+          otherSpan.style.backgroundColor = "white";
         }
       }
     }
@@ -192,65 +192,76 @@ function nextQuestionStage() {
   //function to set the question timer
   setQuestionTimer();
 
-  //if there is image
-  if (checkMediaType(currentQuestion.A) === "image") {
-    const options = document.querySelectorAll(".game-options-container span");
-    for (const option of options) {
-      option.style.display = "flex";
-      option.style.justifyContent = "center";
-      option.style.alignItems = "center";
-    }
+  const arr = ["A", "B", "C", "D"];
+  const options = document.querySelectorAll(".game-options-container span");
 
-    const arr = ["A", "B", "C", "D"];
+  for (const option of options) {
+    option.style.display = "flex";
+    option.style.justifyContent = "center";
+    option.style.alignItems = "center";
+  }
 
-    let imageStyles = document.querySelectorAll(
-      ".game-options-container span label"
+  for (let i = 0; i < arr.length; i++) {
+    const optionKey = arr[i];
+    const optionValue = currentQuestion[optionKey];
+    const optionContainer = document.getElementById(
+      `option-${["one", "two", "three", "four"][i]}-label`
     );
-    for (let i = 0; i < imageStyles.length; i++) {
-      imageStyles[i].style.background = `url("${
-        currentQuestion[`${arr[i]}`]
-      }")`;
-      imageStyles[i].innerText = "";
-      imageStyles[i].style.height = "90px";
-      imageStyles[i].style.width = "120px";
-      imageStyles[i].style.backgroundSize = "contain";
-      imageStyles[i].style.backgroundRepeat = "no-repeat";
-      imageStyles[i].style.backgroundPosition = "center";
-    }
-  } else if (checkMediaType(currentQuestion.A) === "audio") {
-    // if there is audio
-    const options = document.querySelectorAll(".game-options-container span");
-    for (const option of options) {
-      option.style.display = "flex";
-      option.style.justifyContent = "center";
-      option.style.alignItems = "center";
-    }
+    const mediaType = checkMediaType(optionValue);
 
-    const arr = ["A", "B", "C", "D"];
-
-    let audioStyles = document.querySelectorAll(
-      ".game-options-container span label"
-    );
-    for (let i = 0; i < audioStyles.length; i++) {
-      audioStyles[i].innerHTML =
-        /*HTML*/
-        `<audio controls>
-    <source src="${currentQuestion[`${arr[i]}`]}" type="audio/ogg">
-    <source src="${currentQuestion[`${arr[i]}`]}" type="audio/mpeg">
-  Your browser does not support the audio element.
-  </audio>`;
+    if (mediaType === "image") {
+      optionContainer.style.display = "flex";
+      optionContainer.style.justifyContent = "center";
+      optionContainer.style.alignItems = "center";
+      optionContainer.style.background = `url("${optionValue}")`;
+      optionContainer.innerText = "";
+      optionContainer.style.height = "90px";
+      optionContainer.style.width = "120px";
+      optionContainer.style.backgroundSize = "contain";
+      optionContainer.style.backgroundRepeat = "no-repeat";
+      optionContainer.style.backgroundPosition = "center";
+    } else if (mediaType === "audio") {
+      optionContainer.style.display = "flex";
+      optionContainer.style.justifyContent = "center";
+      optionContainer.style.alignItems = "center";
+      optionContainer.innerHTML = `
+      <audio controls>
+        <source src="${optionValue}" type="audio/ogg">
+        <source src="${optionValue}" type="audio/mpeg">
+        Your browser does not support the audio element.
+      </audio>
+    `;
+      keepTrackOfAudios();
+    } else {
+      // Plain text option
+      optionContainer.innerHTML = optionValue;
     }
-  } else {
-    // if options are plain text
-    document.getElementById("option-one-label").innerHTML = currentQuestion.A;
-    document.getElementById("option-two-label").innerHTML = currentQuestion.B;
-    document.getElementById("option-three-label").innerHTML = currentQuestion.C;
-    document.getElementById("option-four-label").innerHTML = currentQuestion.D;
+  }
+
+  // if some option(s) are empty, do not show them
+  const abcd = {
+    A: document.getElementById("option-one-span"),
+    B: document.getElementById("option-two-span"),
+    C: document.getElementById("option-three-span"),
+    D: document.getElementById("option-four-span"),
+  };
+
+  for (const optionKey in abcd) {
+    const option = abcd[optionKey];
+    if (currentQuestion[optionKey] === "") {
+      option.style.visibility = "hidden";
+    }
   }
 
   //set the hint modal
   document.querySelector(".hint-btn").addEventListener("click", function () {
-    document.querySelector(".hint-detail").innerHTML = currentQuestion.hints;
+    if (checkMediaType(currentQuestion.hints) === "image") {
+      document.querySelector(".hint-detail").innerHTML = /*HTML*/ `
+      <img src="${currentQuestion.hints}" alt="hint" />
+      `;
+    } else {
+      document.querySelector(".hint-detail").innerHTML = currentQuestion.hints;
+    }
     document.getElementById("hint-modal").style.display = "flex";
     document.querySelector(".game-details-container").style.filter =
       "blur(5px)";
@@ -479,6 +490,11 @@ function resetStage() {
   for (const span of spans) {
     span.style.backgroundColor = "white";
   }
+
+  document.getElementById("option-one-span").style.visibility = "visible";
+  document.getElementById("option-two-span").style.visibility = "visible";
+  document.getElementById("option-three-span").style.visibility = "visible";
+  document.getElementById("option-four-span").style.visibility = "visible";
 }
 
 //called when the continue button is clicked
@@ -529,11 +545,32 @@ async function handleEndGame() {
   document.getElementById("score-modal").style.display = "flex";
 }
 
-//closes score modal and resets game
+//closes score modal and direct to next set of questions
 document
   .querySelector(".modal-button-img")
-  .addEventListener("click", function closeScoreModal() {
-    window.location.href = "index.html";
+  .addEventListener("click", async function closeScoreModal() {
+    const today = new Date();
+    const formattedDate = today.toISOString().split("T")[0];
+
+    // Retrieve the studentId from session storage
+    const studentId = sessionStorage.getItem("studentId");
+
+    const res = await fetch(
+      `/quiz/next/${studentId}/quiz?date=${formattedDate}`
+    );
+    const data = await res.json();
+
+    // Find the first object with status "pending"
+    const pendingQuiz = data.find((obj) => obj.status === "Pending");
+    if (pendingQuiz === undefined) {
+      window.location.href = "http://203.86.233.67/Quiz.aspx"; //redirect to home if no more quiz
+      return;
+    }
+
+    // Extract the quiz_guid value
+    const { quiz_guid } = pendingQuiz;
+
+    window.location.href = `/start.html?quiz_guid=${quiz_guid}`;
   });
 
 //function to close warning modal
@@ -581,7 +618,7 @@ function formatTimeToSeconds(timeString) {
 }
 
 function checkMediaType(media) {
-  if (/\.(jpg|png|tif)$/i.test(media)) {
+  if (/\.(jpeg|jpg|png|tif)$/i.test(media)) {
     return "image";
   } else if (/\.(mp3|ogg)$/i.test(media)) {
     return "audio";

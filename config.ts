@@ -1,5 +1,5 @@
 export let db =
-  "server=192.168.30.130;Database=KT;Uid=sa;Pwd=abcd@1234;Driver={SQL Server Native Client 11.0};";
+  "server=192.168.30.155;Database=KT;Uid=sa;Pwd=abcd@1234;Driver={SQL Server Native Client 11.0};";
 export let servicePort = "8000";
 export let debug = true;
 export let title = "ERP Suite";

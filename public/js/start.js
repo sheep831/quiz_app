@@ -3,7 +3,7 @@
 // -------------------------------------------------------------------------------------------------------------------
 let userData;
 const urlParams = new URLSearchParams(window.location.search);
-const quiz_guid = urlParams.get("quiz");
+const quiz_guid = urlParams.get("quiz_guid");
 
 (async function loadData() {
   const res = await fetch(`/user/details/${quiz_guid}`);
@@ -79,6 +79,8 @@ const quiz_guid = urlParams.get("quiz");
   </audio>
     `;
   }
+  // Store the studentId in session storage
+  sessionStorage.setItem("studentId", userData.student_id);
 })();
 
 document.querySelector("#continue").addEventListener("click", () => {
